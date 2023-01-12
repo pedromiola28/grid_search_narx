@@ -1,50 +1,26 @@
-########################################importing libraries########################################
+######################################## importing libraries ########################################
 
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-import pathlib
-
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import r2_score
-
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler() #Scaling data between 0 and 1
-
 from torch import nn
-
 from sysidentpy.metrics import mean_squared_error
 from sysidentpy.metrics import r2_score
-from sysidentpy.utils.generate_data import get_siso_data
 from sysidentpy.neural_network import NARXNN
-
-from sysidentpy.basis_function._basis_function import Polynomial, Fourier
-from sysidentpy.utils.generate_data import get_siso_data
-from sysidentpy.utils.plotting import plot_residues_correlation, plot_results
-from sysidentpy.residues.residues_correlation import compute_residues_autocorrelation, compute_cross_correlation
-from sysidentpy.utils.narmax_tools import regressor_code
-
-from sklearn.neural_network import MLPRegressor
-
+from sysidentpy.basis_function._basis_function import Polynomial
 import matplotlib.pyplot as plt
-import matplotlib
-from torch import optim
-from torch.utils.data import DataLoader
 
-import sklearn
-from sklearn.model_selection import GridSearchCV
-
-
-
-########################################collecting and scaling data########################################
+######################################## collecting and scaling data ########################################
 paths_train = ['C:/Users/Avell/Desktop/TCC/Tests0.txt_mean_11_39_02.txt',
                'C:/Users/Avell/Desktop/TCC/Tests1.txt_mean_08_33_39.txt',
                'C:/Users/Avell/Desktop/TCC/Tests1.txt_mean_11_15_31.txt',
-               'C:/Users/Avell/Desktop/TCC/Tests2.txt_mean_08_26_59.txt'] #create list with the train data paths
+               'C:/Users/Avell/Desktop/TCC/Tests2.txt_mean_08_26_59.txt'] # list with the train data paths
 
-paths_test = ['C:/Users/Avell/Desktop/TCC/Tests_valid0.txt_mean_09_41_14.txt'] #create list with the test data paths
+paths_test = ['C:/Users/Avell/Desktop/TCC/Tests_valid0.txt_mean_09_41_14.txt'] # list with the test data paths
               
-paths_mpc = ['C:/Users/Avell/Desktop/TCC/Tests_MPC0.txt_mean_12_38_39.txt'] #create list with the mpc validation data paths
+paths_mpc = ['C:/Users/Avell/Desktop/TCC/Tests_MPC0.txt_mean_12_38_39.txt'] # list with the mpc validation data paths
 
 
 X_train, y_train, X_test, y_test, X_mpc, y_mpc = [], [], [], [], [], []
@@ -66,17 +42,17 @@ for path in paths_train: #training data
   aux2 = []
   i = i+1
   for j in range(0, int(len(a)/cut)):
-    aux1.append(a.iloc[int(cut*j),[0,1,2,3,4,47,53,54]])                              # run with different files for train and test
-    aux2.append([a.iloc[int(cut*j),43]])                                              # run with different files for train and test
+    aux1.append(a.iloc[int(cut*j),[0,1,2,3,4,47,53,54]])                              
+    aux2.append([a.iloc[int(cut*j),43]])                                              
     cb_scale.append(a.iloc[int(cut*j),[47]])
     cold_scale.append(a.iloc[int(cut*j),[53]])
     hot_scale.append(a.iloc[int(cut*j),[54]])
     y_scale.append([a.iloc[int(cut*j),43]])
-    #aux1.append(a.iloc[:int(0.7*len(a)),[54]])                                       # run with same file as test data
-    #aux2.append([a.iloc[:int(0.7*len(a)),53]])                                       # run with same file as test data
   
   X_train.append(np.asarray(aux1))
   y_train.append(np.asarray(aux2))
+
+
 
 for path in paths_test: #test data
   b = pd.read_csv(path, skiprows = 6, sep = '\t', header=0, encoding='cp1252')
@@ -84,17 +60,15 @@ for path in paths_test: #test data
   aux1 = []
   aux2 = []
   for j in range(0, int(len(b)/cut)):
-    aux1.append(b.iloc[int(cut*j),[0,1,2,3,4,47,53,54]])                              # run with different files for train and test
-    aux2.append([b.iloc[int(cut*j),43]])                                              # run with different files for train and test
-
-    #aux1.append(b.iloc[int(0.7*len(a)):,[54]])                                       # run with same file as train data
-    #aux2.append([b.iloc[int(0.7*len(a)):,53]])                                       # run with same file as train data
+    aux1.append(b.iloc[int(cut*j),[0,1,2,3,4,47,53,54]])                              
+    aux2.append([b.iloc[int(cut*j),43]])                                             
 
   X_test.append(np.asarray(aux1))
   y_test.append(np.asarray(aux2))
 
 
-for path in paths_mpc: #test data
+
+for path in paths_mpc: #mpc test data
   c = pd.read_csv(path, skiprows = 6, sep = '\t', header=0, encoding='cp1252')
   c = pd.DataFrame(b)
   aux1 = []
@@ -134,6 +108,7 @@ for i in range(0, len(X_mpc)):
     y_mpc[i][j] = yscale.transform(y_test[i][j].reshape(1,-1))
 
 ########################################defining the grid for the grid search########################################
+
 xlags = [[[1],[1],[1],[1],[1],[1],[1],[1]],
          [[1,2],[1,2],[1,2],[1,2],[1,2],[1,2],[1,2],[1,2]],
          [[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3],[1,2,3]],
@@ -144,13 +119,13 @@ xlags = [[[1],[1],[1],[1],[1],[1],[1],[1]],
          [[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8],[1,2,3,4,5,6,7,8]],
          [[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9],[1,2,3,4,5,6,7,8,9]],
          [[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10],[1,2,3,4,5,6,7,8,9,10]]
-        ]
+        ] #range of input lags
 
-ylags = [1,2,3,4,5,6,7,8,9,10]
+ylags = [1,2,3,4,5,6,7,8,9,10] #range of output lags
 
-neurons = [0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.5,3]
+neurons = [0.75,1,1.25,1.5,1.75,2,2.5,3] #range of neurons
 
-nbs_hl = [2,3,4,5,6]
+nbs_hl = [2,3,4,5,6] #range of hidden layers
 ######################################## grid searching with 50 epochs ########################################
 best_result = ''
 results_compiled = []
@@ -238,7 +213,7 @@ for xlag in xlags:
                 if r2>np.min(best_r2_results):
                     index = best_r2_results.index(np.min(best_r2_results))
                     best_r2_results[index]=r2
-                    if len(best_results_compiled)>20:
+                    if len(best_results_compiled)>=20:
                         del best_results_compiled[index]
                     best_results_compiled.insert(index,results)
 
@@ -258,7 +233,7 @@ for r in best_results_compiled:
   f.write(str(r)+'\n')
 f.close()
 
-########################################train for 300 epochs the 20 best results########################################
+######################################## train for 300 epochs the 20 best results ########################################
 best_300epochs = []
 tloss_compiled = []
 vloss_compiled = []
@@ -280,7 +255,7 @@ for results in best_results_compiled:
         model_type="NARMAX",
         loss_func='mse_loss',
         optimizer='Adam',
-        epochs=300, #chose epochs
+        epochs=100, #chose epochs
         verbose=True,
         learning_rate = 3e-04,
         optim_params={'betas': (0.9, 0.999),
