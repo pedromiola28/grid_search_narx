@@ -171,7 +171,7 @@ for xlag in xlags:
                         for m in self.modules():
                             if isinstance(m, nn.Linear):
                                 nn.init.xavier_normal_(m.weight)
-
+                                nn.init.zeros_(m.bias)
                     def forward(self, xb):
                         z = self.lin1(xb)
                         z = self.tanh(z)
@@ -261,7 +261,7 @@ for results in best_results_compiled:
         optim_params={'betas': (0.9, 0.999),
             'eps': 1e-05} # optional parameters of the optimizer
         )
-
+    torch.manual_seed(1) #random state seed
     class NARX(nn.Module):
         def __init__(self, nlag, nb_hidden_layer, n):
             super().__init__()
@@ -274,7 +274,7 @@ for results in best_results_compiled:
             for m in self.modules():
                 if isinstance(m, nn.Linear):
                     nn.init.xavier_normal_(m.weight)
-
+                    nn.init.zeros_(m.bias)
         def forward(self, xb):
             z = self.lin1(xb)
             z = self.tanh(z)
