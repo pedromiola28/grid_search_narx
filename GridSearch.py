@@ -158,7 +158,7 @@ for xlag in xlags:
                     optim_params={'betas': (0.9, 0.999),
                         'eps': 1e-05} # optional parameters of the optimizer
                 )
-
+                torch.manual_seed(1) #random state seed
                 class NARX(nn.Module):
                     def __init__(self, nlag, nb_hidden_layer, n):
                         super().__init__()
