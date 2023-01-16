@@ -6,11 +6,10 @@ from sklearn.metrics import r2_score
 from sklearn.preprocessing import MinMaxScaler
 scaler = MinMaxScaler() #Scaling data between 0 and 1
 from torch import nn
-from sysidentpy.metrics import mean_squared_error
+import torch
 from sysidentpy.metrics import r2_score
 from sysidentpy.neural_network import NARXNN
 from sysidentpy.basis_function._basis_function import Polynomial
-import matplotlib.pyplot as plt
 
 ######################################## collecting and scaling data ########################################
 paths_train = ['C:/Users/Avell/Desktop/TCC/Tests0.txt_mean_11_39_02.txt',
